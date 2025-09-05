@@ -14,7 +14,7 @@ class N8NIntegration:
     
     def __init__(self):
         # URL do webhook do n8n (pode ser configurada via variável de ambiente)
-        self.webhook_url = os.getenv('N8N_WEBHOOK_URL', 'https://n8n-n8n.dwu3jc.easypanel.host/webhook/ec4f9b55-a8da-46ac-b8d5-5df3a4cc6847')
+        self.webhook_url = os.getenv('N8N_WEBHOOK_URL', 'https://n8n-n8n.dwu3jc.easypanel.host/webhook-test/ec4f9b55-a8da-46ac-b8d5-5df3a4cc6847')
         self.timeout = 10  # timeout em segundos
         
     def send_alexa_data(self, alexa_request: Dict[str, Any], alexa_response: Dict[str, Any]) -> Optional[Dict[str, Any]]:
