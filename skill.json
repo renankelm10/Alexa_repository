@@ -1,0 +1,51 @@
+{
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "pt-BR": {
+          "summary": "Uma skill que mantém conversas contínuas com o usuário",
+          "examplePhrases": [
+            "Alexa, abra assistente conversacional",
+            "Alexa, peça para assistente conversacional me ajudar",
+            "Alexa, fale com assistente conversacional"
+          ],
+          "keywords": [
+            "conversa",
+            "assistente",
+            "ajuda",
+            "conversacional"
+          ],
+          "name": "Assistente Conversacional",
+          "description": "Esta skill permite manter conversas contínuas com a Alexa, sempre esperando uma resposta do usuário. Integrada com n8n para processamento avançado de dados e automação de workflows."
+        }
+      },
+      "isAvailableWorldwide": false,
+      "testingInstructions": "Para testar a skill, diga 'Alexa, abra assistente conversacional' e faça perguntas ou solicite ajuda. A skill manterá a conversa ativa esperando sempre uma resposta.",
+      "category": "PRODUCTIVITY",
+      "distributionCountries": ["BR"]
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "https://your-flask-app-url.com/api/alexa"
+        },
+        "interfaces": []
+      }
+    },
+    "manifestVersion": "1.0",
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "usesPersonalInfo": false,
+      "isChildDirected": false,
+      "isExportCompliant": true,
+      "containsAds": false,
+      "locales": {
+        "pt-BR": {
+          "privacyPolicyUrl": "",
+          "termsOfUseUrl": ""
+        }
+      }
+    }
+  }
+}
+

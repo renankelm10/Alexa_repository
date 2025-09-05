@@ -1,0 +1,78 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "assistente conversacional",
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "UserInputIntent",
+          "slots": [
+            {
+              "name": "userText",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "{userText}",
+            "eu quero {userText}",
+            "me ajude com {userText}",
+            "preciso de {userText}",
+            "gostaria de {userText}",
+            "pode me dizer sobre {userText}",
+            "o que você sabe sobre {userText}",
+            "me fale sobre {userText}",
+            "quero saber sobre {userText}",
+            "me explique {userText}",
+            "como funciona {userText}",
+            "qual é {userText}",
+            "onde fica {userText}",
+            "quando {userText}",
+            "por que {userText}",
+            "como {userText}",
+            "me conte sobre {userText}",
+            "preciso saber {userText}",
+            "você pode {userText}",
+            "é possível {userText}"
+          ]
+        }
+      ],
+      "types": []
+    },
+    "dialog": {
+      "intents": [
+        {
+          "name": "UserInputIntent",
+          "confirmationRequired": false,
+          "prompts": {},
+          "slots": [
+            {
+              "name": "userText",
+              "type": "AMAZON.SearchQuery",
+              "confirmationRequired": false,
+              "elicitationRequired": false,
+              "prompts": {}
+            }
+          ]
+        }
+      ],
+      "delegationStrategy": "ALWAYS"
+    },
+    "prompts": []
+  }
+}
+
