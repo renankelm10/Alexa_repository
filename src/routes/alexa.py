@@ -5,7 +5,7 @@ from src.services.n8n_integration import n8n_integration
 
 alexa_bp = Blueprint('alexa', __name__)
 
-# Configurar logging
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -15,20 +15,18 @@ def alexa_skill():
     Endpoint principal para receber requisições da Alexa
     """
     try:
-        # Obter dados da requisição
+
         alexa_request = request.get_json()
         
-        # Log da requisição para debug
+
         logger.info(f"Alexa Request: {json.dumps(alexa_request, indent=2)}")
-        
-        # Extrair informações importantes
+
         request_type = alexa_request.get('request', {}).get('type')
         intent_name = alexa_request.get('request', {}).get('intent', {}).get('name')
         user_input = alexa_request.get('request', {}).get('intent', {}).get('slots', {})
         session_id = alexa_request.get('session', {}).get('sessionId')
         user_id = alexa_request.get('session', {}).get('user', {}).get('userId')
-        
-        # Processar diferentes tipos de requisição
+
         if request_type == 'LaunchRequest':
             response = handle_launch_request(alexa_request)
         elif request_type == 'IntentRequest':
@@ -37,8 +35,7 @@ def alexa_skill():
             response = handle_session_ended_request(alexa_request)
         else:
             response = create_response("Desculpe, não entendi sua solicitação.", False)
-        
-        # Enviar dados para o n8n
+
         send_to_n8n(alexa_request, response)
         
         return jsonify(response)
