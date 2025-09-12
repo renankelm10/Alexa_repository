@@ -3,178 +3,141 @@ import json
 import logging
 from src.services.n8n_integration import n8n_integration
 
-alexa_bp = Blueprint('alexa', __name__)
+alexa_bp = Blueprint("alexa", __name__)
 
-
+# Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-@alexa_bp.route('/alexa', methods=['POST'])
+@alexa_bp.route("/alexa", methods=["POST"])
 def alexa_skill():
     """
-    Endpoint principal para receber requisições da Alexa
+    Endpoint principal para receber requisições da Alexa e encaminhar para o n8n.
     """
     try:
-
         alexa_request = request.get_json()
+        logger.info(f"[Alexa Skill] Requisição Alexa recebida: {json.dumps(alexa_request, indent=2)}")
+
+        # Detecta o tipo de requisição
+        request_type = alexa_request.get("request", {}).get("type", "")
+        logger.info(f"[Alexa Skill] Tipo de requisição: {request_type}")
         
-
-        logger.info(f"Alexa Request: {json.dumps(alexa_request, indent=2)}")
-
-        request_type = alexa_request.get('request', {}).get('type')
-        intent_name = alexa_request.get('request', {}).get('intent', {}).get('name')
-        user_input = alexa_request.get('request', {}).get('intent', {}).get('slots', {})
-        session_id = alexa_request.get('session', {}).get('sessionId')
-        user_id = alexa_request.get('session', {}).get('user', {}).get('userId')
-
-        if request_type == 'LaunchRequest':
-            response = handle_launch_request(alexa_request)
-        elif request_type == 'IntentRequest':
-            response = handle_intent_request(alexa_request, intent_name, user_input)
-        elif request_type == 'SessionEndedRequest':
-            response = handle_session_ended_request(alexa_request)
-        else:
-            response = create_response("Desculpe, não entendi sua solicitação.", False)
-
-        send_to_n8n(alexa_request, response)
+        # Para LaunchRequest (quando o usuário abre a skill)
+        if request_type == "LaunchRequest":
+            logger.info("[Alexa Skill] LaunchRequest detectado - iniciando conversa")
+            welcome_response = {
+                "version": "1.0",
+                "response": {
+                    "outputSpeech": {
+                        "type": "PlainText",
+                        "text": "Bem-vindo à conversa em inglês com IA! Como posso ajudar você hoje? Você pode me fazer perguntas ou praticar conversação em inglês."
+                    },
+                    "reprompt": {
+                        "outputSpeech": {
+                            "type": "PlainText",
+                            "text": "Como posso ajudar você com o inglês hoje?"
+                        }
+                    },
+                    "shouldEndSession": False
+                }
+            }
+            return jsonify(welcome_response)
         
-        return jsonify(response)
+        # Para SessionEndedRequest
+        elif request_type == "SessionEndedRequest":
+            logger.info("[Alexa Skill] SessionEndedRequest - encerrando sessão")
+            return jsonify({
+                "version": "1.0",
+                "response": {
+                    "shouldEndSession": True
+                }
+            })
         
-    except Exception as e:
-        logger.error(f"Erro no processamento: {str(e)}")
-        error_response = create_response("Desculpe, ocorreu um erro. Tente novamente.", True)
-        return jsonify(error_response)
-
-def handle_launch_request(alexa_request):
-    """
-    Manipula a requisição de abertura da skill
-    """
-    welcome_message = "Olá! Bem-vindo à nossa skill. Como posso ajudá-lo hoje?"
-    reprompt_message = "Você pode me fazer uma pergunta ou pedir ajuda. O que gostaria de saber?"
-    
-    return create_response_with_reprompt(welcome_message, reprompt_message, False)
-
-def handle_intent_request(alexa_request, intent_name, user_input):
-    """
-    Manipula requisições de intent
-    """
-    if intent_name == 'AMAZON.HelpIntent':
-        help_message = "Esta skill pode ajudá-lo com várias tarefas. Você pode fazer perguntas ou solicitar informações. O que você gostaria de saber?"
-        return create_response_with_reprompt(help_message, "Como posso ajudá-lo?", False)
-    
-    elif intent_name == 'AMAZON.StopIntent' or intent_name == 'AMAZON.CancelIntent':
-        goodbye_message = "Obrigado por usar nossa skill. Até logo!"
-        return create_response(goodbye_message, True)
-    
-    elif intent_name == 'UserInputIntent':
-        # Intent personalizada para capturar entrada do usuário
-        user_text = extract_user_text(user_input)
-        response_text = process_user_input(user_text, alexa_request)
-        return create_response_with_reprompt(response_text, "Há mais alguma coisa que posso ajudar?", False)
-    
-    else:
-        # Intent não reconhecida
-        fallback_message = "Não entendi sua solicitação. Pode repetir de forma diferente?"
-        return create_response_with_reprompt(fallback_message, "Como posso ajudá-lo?", False)
-
-def handle_session_ended_request(alexa_request):
-    """
-    Manipula o fim da sessão
-    """
-    return create_response("", True)
-
-def extract_user_text(slots):
-    """
-    Extrai o texto do usuário dos slots
-    """
-    if 'userText' in slots and 'value' in slots['userText']:
-        return slots['userText']['value']
-    return ""
-
-def process_user_input(user_text, alexa_request):
-    """
-    Processa a entrada do usuário usando n8n para gerar resposta inteligente
-    """
-    if not user_text:
-        return "Não consegui entender o que você disse. Pode repetir?"
-    
-    # Preparar contexto da conversa
-    context = {
-        "session_id": alexa_request.get('session', {}).get('sessionId'),
-        "user_id": alexa_request.get('session', {}).get('user', {}).get('userId'),
-        "session_attributes": alexa_request.get('session', {}).get('attributes', {}),
-        "locale": alexa_request.get('request', {}).get('locale', 'pt-BR')
-    }
-    
-    # Tentar obter resposta do n8n
-    n8n_response = n8n_integration.get_response_from_n8n(user_text, context)
-    
-    if n8n_response:
-        return n8n_response
-    else:
-        # Fallback caso n8n não esteja disponível
-        return f"Entendi que você disse: {user_text}. Como posso ajudá-lo com isso? (Processamento avançado temporariamente indisponível)"
-
-def send_to_n8n(alexa_request, alexa_response):
-    """
-    Envia dados para o webhook do n8n usando o serviço de integração
-    """
-    try:
-        result = n8n_integration.send_alexa_data(alexa_request, alexa_response)
-        
-        if result:
-            logger.info("Dados enviados para n8n com sucesso")
-        else:
-            logger.warning("Falha ao enviar dados para n8n")
+        # Para IntentRequest (interações do usuário)
+        elif request_type == "IntentRequest":
+            intent_name = alexa_request.get("request", {}).get("intent", {}).get("name", "")
+            logger.info(f"[Alexa Skill] Intent detectado: {intent_name}")
             
+            # Trata intents especiais da Amazon
+            if intent_name == "AMAZON.StopIntent" or intent_name == "AMAZON.CancelIntent":
+                return jsonify({
+                    "version": "1.0",
+                    "response": {
+                        "outputSpeech": {
+                            "type": "PlainText",
+                            "text": "Até logo! Foi ótimo conversar com você. Volte sempre para praticar mais inglês!"
+                        },
+                        "shouldEndSession": True
+                    }
+                })
+            
+            elif intent_name == "AMAZON.HelpIntent":
+                return jsonify({
+                    "version": "1.0",
+                    "response": {
+                        "outputSpeech": {
+                            "type": "PlainText",
+                            "text": "Você pode me fazer perguntas em inglês, pedir traduções, explicações gramaticais ou simplesmente conversar para praticar. Por exemplo, diga 'What is the weather like?' ou 'How do you say olá in English?'"
+                        },
+                        "reprompt": {
+                            "outputSpeech": {
+                                "type": "PlainText",
+                                "text": "O que você gostaria de aprender ou praticar?"
+                            }
+                        },
+                        "shouldEndSession": False
+                    }
+                })
+        
+        # Envia a requisição completa da Alexa para o n8n e espera a resposta
+        n8n_alexa_response = n8n_integration.process_alexa_request_with_n8n(alexa_request)
+
+        if n8n_alexa_response:
+            logger.info(f"[Alexa Skill] Resposta formatada do n8n recebida: {json.dumps(n8n_alexa_response, indent=2)}")
+            return jsonify(n8n_alexa_response)
+        else:
+            logger.error("[Alexa Skill] N8N não retornou uma resposta válida ou ocorreu um erro no processamento.")
+            # Fallback para uma resposta de erro padrão da Alexa
+            error_response = {
+                "version": "1.0",
+                "response": {
+                    "outputSpeech": {
+                        "type": "PlainText",
+                        "text": "Desculpe, não consegui processar sua solicitação no momento. Por favor, tente novamente."
+                    },
+                    "reprompt": {
+                        "outputSpeech": {
+                            "type": "PlainText",
+                            "text": "Você pode tentar fazer sua pergunta de outra forma?"
+                        }
+                    },
+                    "shouldEndSession": False
+                }
+            }
+            return jsonify(error_response)
+
     except Exception as e:
-        logger.error(f"Erro ao enviar dados para n8n: {str(e)}")
-
-def create_response(output_speech, should_end_session):
-    """
-    Cria uma resposta básica para a Alexa
-    """
-    return {
-        "version": "1.0",
-        "response": {
-            "outputSpeech": {
-                "type": "PlainText",
-                "text": output_speech
-            },
-            "shouldEndSession": should_end_session
-        }
-    }
-
-def create_response_with_reprompt(output_speech, reprompt_text, should_end_session):
-    """
-    Cria uma resposta com reprompt para a Alexa
-    """
-    return {
-        "version": "1.0",
-        "response": {
-            "outputSpeech": {
-                "type": "PlainText",
-                "text": output_speech
-            },
-            "reprompt": {
+        logger.error(f"[Alexa Skill] Erro no processamento da skill Alexa: {str(e)}", exc_info=True)
+        error_response = {
+            "version": "1.0",
+            "response": {
                 "outputSpeech": {
                     "type": "PlainText",
-                    "text": reprompt_text
-                }
-            },
-            "shouldEndSession": should_end_session
+                    "text": "Desculpe, ocorreu um erro inesperado. Por favor, tente novamente."
+                },
+                "shouldEndSession": False
+            }
         }
-    }
+        return jsonify(error_response)
 
-@alexa_bp.route('/health', methods=['GET'])
+@alexa_bp.route("/health", methods=["GET"])
 def health_check():
     """
     Endpoint para verificar se o serviço está funcionando
     """
     return jsonify({"status": "healthy", "service": "alexa-skill"})
 
-
-@alexa_bp.route('/n8n-status', methods=['GET'])
+@alexa_bp.route("/n8n-status", methods=["GET"])
 def n8n_status():
     """
     Endpoint para verificar se a integração com n8n está funcionando
@@ -187,7 +150,7 @@ def n8n_status():
         "timestamp": n8n_integration._prepare_payload({}, {})["timestamp"]
     })
 
-@alexa_bp.route('/send-test-event', methods=['POST'])
+@alexa_bp.route("/send-test-event", methods=["POST"])
 def send_test_event():
     """
     Endpoint para enviar um evento de teste para o n8n
@@ -205,3 +168,57 @@ def send_test_event():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@alexa_bp.route("/test-alexa-request", methods=["POST"])
+def test_alexa_request():
+    """
+    Endpoint de teste para simular uma requisição da Alexa
+    """
+    try:
+        # Requisição de teste simulada
+        test_alexa_request = request.get_json() or {
+            "version": "1.0",
+            "session": {
+                "new": True,
+                "sessionId": "test-session-123",
+                "user": {
+                    "userId": "test-user-123"
+                }
+            },
+            "request": {
+                "type": "IntentRequest",
+                "requestId": "test-request-123",
+                "locale": "pt-BR",
+                "timestamp": "2025-09-12T18:00:00Z",
+                "intent": {
+                    "name": "HelloWorldIntent",
+                    "slots": {
+                        "message": {
+                            "value": "Hello, how are you?"
+                        }
+                    }
+                }
+            }
+        }
+        
+        logger.info(f"[Test] Enviando requisição de teste: {json.dumps(test_alexa_request, indent=2)}")
+        
+        # Processa como se fosse uma requisição real
+        n8n_response = n8n_integration.process_alexa_request_with_n8n(test_alexa_request)
+        
+        if n8n_response:
+            return jsonify({
+                "status": "success",
+                "alexa_response": n8n_response
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "message": "N8N não retornou resposta"
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"[Test] Erro no teste: {str(e)}", exc_info=True)
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
