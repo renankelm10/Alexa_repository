@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "assistente conversacional",
+      "invocationName": "converse comigo",
       "intents": [
         {
           "name": "AMAZON.CancelIntent",
@@ -16,8 +16,28 @@
           "samples": []
         },
         {
+          "name": "HelloWorldIntent",
+          "slots": [],
+          "samples": [
+            "olá",
+            "como vai você",
+            "diga oi mundo",
+            "diga oi",
+            "oi",
+            "diga olá mundo",
+            "diga olá"
+          ]
+        },
+        {
           "name": "AMAZON.NavigateHomeIntent",
           "samples": []
+        },
+        {
+          "name": "faleInglescomigo",
+          "slots": [],
+          "samples": [
+            "fale Ingles comigo."
+          ]
         },
         {
           "name": "UserInputIntent",
@@ -29,50 +49,14 @@
           ],
           "samples": [
             "{userText}",
-            "eu quero {userText}",
-            "me ajude com {userText}",
-            "preciso de {userText}",
-            "gostaria de {userText}",
-            "pode me dizer sobre {userText}",
-            "o que você sabe sobre {userText}",
-            "me fale sobre {userText}",
-            "quero saber sobre {userText}",
-            "me explique {userText}",
-            "como funciona {userText}",
-            "qual é {userText}",
-            "onde fica {userText}",
-            "quando {userText}",
-            "por que {userText}",
-            "como {userText}",
-            "me conte sobre {userText}",
-            "preciso saber {userText}",
-            "você pode {userText}",
-            "é possível {userText}"
+            "eu disse {userText}",
+            "minha mensagem é {userText}",
+            "{userText} Alexa"
           ]
         }
       ],
       "types": []
-    },
-    "dialog": {
-      "intents": [
-        {
-          "name": "UserInputIntent",
-          "confirmationRequired": false,
-          "prompts": {},
-          "slots": [
-            {
-              "name": "userText",
-              "type": "AMAZON.SearchQuery",
-              "confirmationRequired": false,
-              "elicitationRequired": false,
-              "prompts": {}
-            }
-          ]
-        }
-      ],
-      "delegationStrategy": "ALWAYS"
-    },
-    "prompts": []
+    }
   }
 }
 
