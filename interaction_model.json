@@ -17,15 +17,21 @@
         },
         {
           "name": "HelloWorldIntent",
-          "slots": [],
+          "slots": [
+            {
+              "name": "userText",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
           "samples": [
-            "olá",
-            "como vai você",
-            "diga oi mundo",
-            "diga oi",
-            "oi",
-            "diga olá mundo",
-            "diga olá"
+            "olá {userText}",
+            "diga {userText}",
+            "como vai você {userText}",
+            "diga oi mundo {userText}",
+            "diga oi {userText}",
+            "oi {userText}",
+            "diga olá mundo {userText}",
+            "diga olá {userText}"
           ]
         },
         {
@@ -48,10 +54,10 @@
             }
           ],
           "samples": [
-            "{userText}",
             "eu disse {userText}",
             "minha mensagem é {userText}",
-            "{userText} Alexa"
+            "Alexa {userText}",
+            "o usuário disse {userText}"
           ]
         }
       ],
