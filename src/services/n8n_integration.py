@@ -55,7 +55,13 @@ class N8NIntegration:
                 
                 # Para intents específicos
                 else:
-                    # Monta uma string com o intent e os valores dos slots
+                    # Se for a HelloWorldIntent e tiver o slot userText
+                    if intent_name == "HelloWorldIntent" and "userText" in intent.get("slots", {}):
+                        user_text_slot = intent["slots"]["userText"]
+                        if "value" in user_text_slot:
+                            return user_text_slot["value"]
+
+                    # Monta uma string com o intent e os valores dos slots como fallback
                     user_text = f"Intent: {intent_name}"
                     slots = intent.get("slots", {})
                     slot_values = []
